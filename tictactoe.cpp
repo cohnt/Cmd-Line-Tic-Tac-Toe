@@ -15,7 +15,7 @@ enum gamePiece {
 };
 typedef array<array<gamePiece, 3>, 3> gameBoard;
 
-const bool useConsoleHack = true;
+const bool useTerminalHackyStuff = true;
 
 void printGamePiece(gamePiece p) {
     switch(p) {
@@ -65,6 +65,10 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
         string input;
         cin >> input;
         if(input.size() < 2u) {
+            if(useTerminalHackyStuff) {
+                printf("\033[2J\033[1;1H");
+            }
+            displayBoard(board);
             cout << "Not enough characters!" << endl << endl;
             continue;
         }
@@ -73,10 +77,18 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
             choice[0] = stoi(input.substr(0, 1));
             choice[1] = stoi(input.substr(1, 2));
             if(choice[0] > 3 || choice[0] < 1 || choice[1] > 3 || choice[1] < 1) {
+                if(useTerminalHackyStuff) {
+                    printf("\033[2J\033[1;1H");
+                }
+                displayBoard(board);
                 cout << "Invalid range!" << endl << endl;
                 continue;
             }
             if(board[choice[0]-1][choice[1]-1] != empty) {
+                if(useTerminalHackyStuff) {
+                    printf("\033[2J\033[1;1H");
+                }
+                displayBoard(board);
                 cout << "Space already picked!" << endl << endl;
                 continue;
             }
@@ -84,6 +96,10 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
             valid = true;
         }
         catch(const std::invalid_argument& err) {
+            if(useTerminalHackyStuff) {
+                printf("\033[2J\033[1;1H");
+            }
+            displayBoard(board);
             cout << "Invalid numbers!" << endl << endl;
             continue;
         }
@@ -160,6 +176,9 @@ int main() {
     bool xTurn = true;
     int winner = 0; //1 for x, 2 for o, -1 for tie.
     while(!gameOver) {
+        if(useTerminalHackyStuff) {
+            printf("\033[2J\033[1;1H");
+        }
         displayBoard(board);
         array<int, 2> choice = getChoice(xTurn, board);
         cout << choice[0] << " " << choice[1] << endl;

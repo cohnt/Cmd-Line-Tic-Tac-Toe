@@ -64,12 +64,12 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
         cout << "For example: 12 would give me the top middle space." << endl;
         string input;
         cin >> input;
-        if(input.size() < 2u) {
+        if(input.size() != 2u) {
             if(useTerminalHackyStuff) {
                 printf("\033[2J\033[1;1H");
             }
             displayBoard(board);
-            cout << "Not enough characters!" << endl << endl;
+            cout << "Wrong number of characters!" << endl << endl;
             continue;
         }
         try {

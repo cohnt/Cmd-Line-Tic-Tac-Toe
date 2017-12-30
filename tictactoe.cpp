@@ -60,7 +60,7 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
     bool valid = false;
     array<int, 2> finalChoice;
     while(!valid) {
-        cout << "Player " << (xTurn ? "X" : "O") << ", it is your turn. Please select your space as two one-digit numbers, separated by nothing. Row first, indexing from one." << endl;
+        cout << "Player " << (xTurn ? "X" : "O") << ", it is your turn. Please select your space as two one-digit numbers, separated by nothing, with row first, and indexing from one." << endl;
         cout << "For example: 12 would give me the top middle space." << endl;
         string input;
         cin >> input;
@@ -103,16 +103,17 @@ int main() {
     bool xTurn = true;
     //int winner = 0; //1 for x, 2 for o, -1 for tie.
     while(!gameOver) {
+        displayBoard(board);
         array<int, 2> choice = getChoice(xTurn, board);
-        cout << choice[0] << choice[1] << endl;
-
-        exit(0);
-
-        board[choice[0]][choice[1]] = (xTurn ? xPiece : oPiece);
+        cout << choice[0] << " " << choice[1] << endl;
+        board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
         checkForWin(board);
         checkForTie(board);
 
-        gameOver = true;
+        xTurn = !xTurn;
+        displayBoard(board);
+
+        //gameOver = true;
     }
 
     return 0;

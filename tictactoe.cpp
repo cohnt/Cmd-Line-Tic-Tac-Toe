@@ -169,12 +169,9 @@ bool checkForTie(gameBoard board) {
     }
     return true;
 }
-
-int main() {
-    gameBoard board = emptyBoard();
+void gameLoop(gameBoard &board, int &winner) {
     bool gameOver = false;
     bool xTurn = true;
-    int winner = 0; //1 for x, 2 for o, -1 for tie.
     while(!gameOver) {
         if(useTerminalHackyStuff) {
             printf("\033[2J\033[1;1H");
@@ -198,7 +195,8 @@ int main() {
 
         xTurn = !xTurn;
     }
-
+}
+void printWinner(gameBoard board, int winner) {
     if(useTerminalHackyStuff) {
         printf("\033[2J\033[1;1H");
     }
@@ -215,6 +213,13 @@ int main() {
     else {
         cout << "Error." << endl;
     }
+}
+
+int main() {
+    gameBoard board = emptyBoard();
+    int winner = 0; //1 for x, 2 for o, -1 for tie.
+    gameLoop(board, winner);
+    printWinner(board, winner);
 
     return 0;
 }

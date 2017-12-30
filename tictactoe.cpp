@@ -148,7 +148,7 @@ bool checkForWin(gameBoard board, bool xTurn) {
 
     diagTotal = 0;
     for(int k=0; k<3; ++k) {
-        if(board[k][k] == player) {
+        if(board[k][2-k] == player) {
             ++diagTotal;
         }
     }
@@ -199,6 +199,10 @@ int main() {
         xTurn = !xTurn;
     }
 
+    if(useTerminalHackyStuff) {
+        printf("\033[2J\033[1;1H");
+    }
+    displayBoard(board);
     if(winner == 1) {
         cout << "X wins!" << endl;
     }

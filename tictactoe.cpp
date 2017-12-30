@@ -90,30 +90,107 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
     }
     return finalChoice;
 }
-void checkForWin(gameBoard board) {
-    //
+bool checkForWin(gameBoard board, bool xTurn) {
+    gamePiece player = xTurn ? xPiece : oPiece;
+
+    //Horizontal
+    for(int i=0; i<3; ++i) {
+        int rowTotal = 0;
+        for(int j=0; j<3; ++j) {
+            if(board[i][j] == player) {
+                ++rowTotal;
+            }
+        }
+        if(rowTotal == 3) {
+            return true;
+        }
+    }
+
+    //Vertical
+    for(int j=0; j<3; ++j) {
+        int colTotal = 0;
+        for(int i=0; i<3; ++i) {
+            if(board[i][j] == player) {
+                ++colTotal;
+            }
+        }
+        if(colTotal == 3) {
+            return true;
+        }
+    }
+
+    //Diagonals
+    int diagTotal = 0;
+    for(int k=0; k<3; ++k) {
+        if(board[k][k] == player) {
+            ++diagTotal;
+        }
+    }
+    if(diagTotal == 3) {
+        return true;
+    }
+
+    diagTotal = 0;
+    for(int k=0; k<3; ++k) {
+        if(board[k][k] == player) {
+            ++diagTotal;
+        }
+    }
+    if(diagTotal == 3) {
+        return true;
+    }
+
+    //Not a win
+    return false;
 }
-void checkForTie(gameBoard board) {
-    //
+bool checkForTie(gameBoard board) {
+    for(int i=0; i<3; ++i) {
+        for(int j=0; j<3; ++j) {
+            if(board[i][j] == empty) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 int main() {
     gameBoard board = emptyBoard();
     bool gameOver = false;
     bool xTurn = true;
-    //int winner = 0; //1 for x, 2 for o, -1 for tie.
+    int winner = 0; //1 for x, 2 for o, -1 for tie.
     while(!gameOver) {
         displayBoard(board);
         array<int, 2> choice = getChoice(xTurn, board);
         cout << choice[0] << " " << choice[1] << endl;
         board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
-        checkForWin(board);
-        checkForTie(board);
+        bool won = checkForWin(board, xTurn);
+        if(won) {
+            winner = xTurn ? 1 : 2;
+            gameOver = true;
+        }
+        else {
+            bool tied = checkForTie(board);
+            if(tied) {
+                winner = -1;
+                gameOver = true;
+            }
+        }
 
         xTurn = !xTurn;
-        displayBoard(board);
+    }
 
-        //gameOver = true;
+    if(winner == 1) {
+        cout << "X wins!" << endl;
+    }
+    else if(winner == 2) {
+        cout << "O wins!" << endl;
+    }
+    else if(winner == -1) {
+        cout << "It's a tie!" << endl;
+    }
+    else {
+        cout << "Error." << endl;
     }
 
     return 0;

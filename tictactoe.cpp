@@ -5,6 +5,9 @@
 #include <array>
 #include <math.h>
 #include <cassert>
+#include <functional>
+
+#include "neuron.h"
 
 using namespace std;
 

@@ -20,7 +20,6 @@ private:
 public:
     NeuralNetworkLayer() {
         //This is stupid. Don't use this.
-        //It also does not currently work, as there's no way (yet) to add neurons later :P
         described = false;
     }
     NeuralNetworkLayer(std::vector<Neuron> neurons) {
@@ -32,6 +31,10 @@ public:
         }
     }
 
+    void addNeuron(Neuron n) {
+        nodes.push_back(n);
+        described = true;
+    }
     std::vector<double> outputs(std::vector<double> sigVals) {
         assert(described);
 
@@ -78,7 +81,6 @@ private:
 public:
     NeuralNetwork() {
         //This is stupid. Don't use this.
-        //It also does not currently work, as there's no way (yet) to add layers later :P
         described = false;
     }
     NeuralNetwork(std::vector<NeuralNetworkLayer> nnls) {
@@ -90,6 +92,10 @@ public:
         }
     }
 
+    void addLayer(NeuralNetworkLayer l) {
+        layers.push_back(l);
+        described = true;
+    }
     std::vector<double> outputs(std::vector<double> inVals) {
         assert(described);
 

@@ -42,6 +42,8 @@ public:
             sigIDs.push_back(signalIDs[i]);
             sigWeights.push_back(signalWeights[i]);
         }
+
+        phi = [](double x){ return log(1+exp(x)); }; //The (Continuous) Rectifier function is default.
     }
     Neuron(std::vector<int> signalIDs, std::vector<double> signalWeights, std::function<double(double)> transFunc) {
         assert(signalIDs.size() == signalWeights.size());
@@ -78,6 +80,10 @@ public:
         }
         return false; //Not in the list of signal ids.
     }
+    std::vector<int> returnSigIds() {
+        //
+        return sigIDs;
+    }
     void newPhi(std::function<double(double)> newFunc) {
         phi = newFunc;
         if(sigIDs.size() != 0u) {
@@ -86,6 +92,7 @@ public:
     }
     double output(std::vector<double> sigVals) {
         assert(described);
+        assert(sigVals.size() == sigIDs.size());
 
         double total = Neuron::sum(sigVals);
         return phi(total);

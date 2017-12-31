@@ -7,7 +7,7 @@
 #include <cassert>
 #include <functional>
 
-#include "neuron.h"
+#include "neuralNetwork.h"
 
 using namespace std;
 
@@ -219,10 +219,31 @@ void printWinner(gameBoard board, int winner) {
 }
 
 int main() {
-    gameBoard board = emptyBoard();
-    int winner = 0; //1 for x, 2 for o, -1 for tie.
-    gameLoop(board, winner);
-    printWinner(board, winner);
+    vector<int> nIds1 = {0, 1, 2, 3};
+    vector<int> nIds2 = {0, 1, 2, 3};
+    vector<int> nIds3 = {0, 3};
+
+    vector<double> nWeights1 = {1, 1, 1, 1};
+    vector<double> nWeights2 = {0.5, 0.5, 0.5, 0.5};
+    vector<double> nWeights3 = {0.67, 0.33};
+
+    function<double(double)> func = [](double x){ return (x>0 ? x : 0); };
+
+    Neuron n1(nIds1, nWeights1, func);
+    Neuron n2(nIds2, nWeights2, func);
+    Neuron n3(nIds3, nWeights3, func);
+
+    vector<Neuron> ns = {n1, n2, n3};
+
+    NeuralNetworkLayer layer(ns);
+
+    vector<double> inputs = {1, 2, 3, 4};
+    vector<double> outputs = layer.outputs(inputs);
+
+    // gameBoard board = emptyBoard();
+    // int winner = 0; //1 for x, 2 for o, -1 for tie.
+    // gameLoop(board, winner);
+    // printWinner(board, winner);
 
     return 0;
 }

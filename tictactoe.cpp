@@ -219,37 +219,88 @@ void printWinner(gameBoard board, int winner) {
 }
 
 int main() {
-    vector<int> nIds1 = {0, 1, 2, 3};
-    vector<int> nIds2 = {0, 1, 2, 3};
-    vector<int> nIds3 = {0, 3};
+    // Sample tic-tac-toe neural network
+    vector<NeuralNetworkLayer> ls;
+    NeuralNetworkLayer l1; //Inputs
+    NeuralNetworkLayer l2; //Hidden
+    NeuralNetworkLayer l3; //Outputs
 
-    vector<double> nWeights1 = {1, 1, 1, 1};
-    vector<double> nWeights2 = {0.5, 0.5, 0.5, 0.5};
-    vector<double> nWeights3 = {0.67, 0.33};
+    //Useful things to have
+    vector<int> all18;
+    vector<double> all1; 
+    for(int i=0; i<18; ++i) {
+        all18.push_back(i);
+        all1.push_back(1.0);
+    }
+    function<double(double)> rectify = [](double x){ return log(1+exp(x)); };
 
-    function<double(double)> func = [](double x){ return (x>0 ? x : 0); };
+    for(int i=0; i<18; ++i) {
+        vector<int> inputIds = {i};
+        vector<double> inputWeights = {1};
+        Neuron neuron(inputIds, inputWeights, rectify);
+        l1.addNeuron(neuron);
+    }
 
-    Neuron n1(nIds1, nWeights1, func);
-    Neuron n2(nIds2, nWeights2, func);
-    Neuron n3(nIds3, nWeights3, func);
+    for(int i=0; i<18; ++i) {
+        vector<int> inputIds = all18;
+        vector<double> inputWeights = all1;
+        Neuron neuron(inputIds, inputWeights, rectify);
+        l2.addNeuron(neuron);
+    }
 
-    vector<Neuron> ns = {n1, n2, n3};
+    for(int i=0; i<9; ++i) {
+        vector<int> inputIds = all18;
+        vector<double> inputWeights = all1;
+        Neuron neuron(inputIds, inputWeights, rectify);
+        l3.addNeuron(neuron);
+    }
 
-    NeuralNetworkLayer layer1(ns);
+    ls.push_back(l1);
+    ls.push_back(l2);
+    ls.push_back(l3);
+    NeuralNetwork network(ls);
 
-    vector<int> l2NIDs = {0, 1, 2};
-    vector<double> l2NWeights = {1, 1, 0.25};
-
-    Neuron l2N(l2NIDs, l2NWeights, func);
-    vector<Neuron> l2 = {l2N};
-    NeuralNetworkLayer layer2(l2);
-
-    vector<NeuralNetworkLayer> layers = {layer1, layer2};
-    NeuralNetwork network(layers);
-
-    vector<double> inputs = {1, 2, 3, 4};
+    vector<double> inputs = all1;
     vector<double> outputs = network.outputs(inputs);
+    cout << endl << "Output:" << endl;
+    for(int i=0; i<int(outputs.size()); ++i) {
+        cout << outputs[i] << endl;
+    }
 
+
+    // Neural network test
+    // vector<int> nIds1 = {0, 1, 2, 3};
+    // vector<int> nIds2 = {0, 1, 2, 3};
+    // vector<int> nIds3 = {0, 3};
+
+    // vector<double> nWeights1 = {1, 1, 1, 1};
+    // vector<double> nWeights2 = {0.5, 0.5, 0.5, 0.5};
+    // vector<double> nWeights3 = {0.67, 0.33};
+
+    // function<double(double)> func = [](double x){ return (x>0 ? x : 0); };
+
+    // Neuron n1(nIds1, nWeights1, func);
+    // Neuron n2(nIds2, nWeights2, func);
+    // Neuron n3(nIds3, nWeights3, func);
+
+    // vector<Neuron> ns = {n1, n2, n3};
+
+    // NeuralNetworkLayer layer1(ns);
+
+    // vector<int> l2NIDs = {0, 1, 2};
+    // vector<double> l2NWeights = {1, 1, 0.25};
+
+    // Neuron l2N(l2NIDs, l2NWeights, func);
+    // vector<Neuron> l2 = {l2N};
+    // NeuralNetworkLayer layer2(l2);
+
+    // vector<NeuralNetworkLayer> layers = {layer1, layer2};
+    // NeuralNetwork network(layers);
+
+    // vector<double> inputs = {1, 2, 3, 4};
+    // vector<double> outputs = network.outputs(inputs);
+
+    // Hotseat tic-tac-toe for two players on one computer
     // gameBoard board = emptyBoard();
     // int winner = 0; //1 for x, 2 for o, -1 for tie.
     // gameLoop(board, winner);

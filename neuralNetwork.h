@@ -102,6 +102,7 @@ public:
         std::vector<double> currentIn = inVals;
         std::vector<double> currentOut;
         for(int i=0; i<int(layers.size()); ++i) {
+            std::cout << std::endl << "Layer " << i << std::endl;
             currentOut = layers[i].outputs(currentIn);
             currentIn = currentOut;
         }

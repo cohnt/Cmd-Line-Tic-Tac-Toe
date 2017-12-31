@@ -29,7 +29,7 @@ private:
 
 public:
     Neuron() {
-        //This is stupid. Don't use this.
+        //
         described = false;
     }
     Neuron(std::vector<int> signalIDs, std::vector<double> signalWeights) {

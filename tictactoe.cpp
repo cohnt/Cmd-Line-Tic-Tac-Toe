@@ -6,8 +6,10 @@
 #include <math.h>
 #include <cassert>
 #include <functional>
+#include <random>
+#include <time.h>
 
-#include "neuralNetwork.h"
+#include "ticTacToeNeuralNetwork.h"
 
 using namespace std;
 
@@ -219,56 +221,63 @@ void printWinner(gameBoard board, int winner) {
 }
 
 int main() {
-    // Sample tic-tac-toe neural network
-    vector<NeuralNetworkLayer> ls;
-    NeuralNetworkLayer l1; //Inputs
-    NeuralNetworkLayer l2; //Hidden
-    NeuralNetworkLayer l3; //Outputs
+    srand(time(NULL));
 
-    //Useful things to have
-    vector<int> all18;
-    vector<double> all1; 
-    for(int i=0; i<18; ++i) {
-        all18.push_back(i);
-        all1.push_back(1.0);
-    }
-    function<double(double)> rectify = [](double x){ return log(1+exp(x)); };
+    // Random tic-tac-toe neural network genome
+    TicTacToeGenome testGenome;
+    testGenome.randomize(3, vector<int>{18, 18, 9});
+    testGenome.printGenome();
 
-    for(int i=0; i<18; ++i) {
-        vector<int> inputIds = {i};
-        vector<double> inputWeights = {1};
-        Neuron neuron(inputIds, inputWeights, rectify);
-        l1.addNeuron(neuron);
-    }
+    // // Sample tic-tac-toe neural network genome
+    // vector<NeuralNetworkLayer> ls;
+    // NeuralNetworkLayer l1; //Inputs
+    // NeuralNetworkLayer l2; //Hidden
+    // NeuralNetworkLayer l3; //Outputs
 
-    for(int i=0; i<18; ++i) {
-        vector<int> inputIds = all18;
-        vector<double> inputWeights = all1;
-        Neuron neuron(inputIds, inputWeights, rectify);
-        l2.addNeuron(neuron);
-    }
+    // //Useful things to have
+    // vector<int> all18;
+    // vector<double> all1; 
+    // for(int i=0; i<18; ++i) {
+    //     all18.push_back(i);
+    //     all1.push_back(1.0);
+    // }
+    // function<double(double)> rectify = [](double x){ return log(1+exp(x)); };
 
-    for(int i=0; i<9; ++i) {
-        vector<int> inputIds = all18;
-        vector<double> inputWeights = all1;
-        Neuron neuron(inputIds, inputWeights, rectify);
-        l3.addNeuron(neuron);
-    }
+    // for(int i=0; i<18; ++i) {
+    //     vector<int> inputIds = {i};
+    //     vector<double> inputWeights = {1};
+    //     Neuron neuron(inputIds, inputWeights, rectify);
+    //     l1.addNeuron(neuron);
+    // }
 
-    ls.push_back(l1);
-    ls.push_back(l2);
-    ls.push_back(l3);
-    NeuralNetwork network(ls);
+    // for(int i=0; i<18; ++i) {
+    //     vector<int> inputIds = all18;
+    //     vector<double> inputWeights = all1;
+    //     Neuron neuron(inputIds, inputWeights, rectify);
+    //     l2.addNeuron(neuron);
+    // }
 
-    vector<double> inputs = all1;
-    vector<double> outputs = network.outputs(inputs);
-    cout << endl << "Output:" << endl;
-    for(int i=0; i<int(outputs.size()); ++i) {
-        cout << outputs[i] << endl;
-    }
+    // for(int i=0; i<9; ++i) {
+    //     vector<int> inputIds = all18;
+    //     vector<double> inputWeights = all1;
+    //     Neuron neuron(inputIds, inputWeights, rectify);
+    //     l3.addNeuron(neuron);
+    // }
+
+    // ls.push_back(l1);
+    // ls.push_back(l2);
+    // ls.push_back(l3);
+    // NeuralNetwork network(ls);
+
+    // vector<double> inputs = all1;
+    // vector<double> outputs = network.outputs(inputs);
+    // cout << endl << "Output:" << endl;
+    // for(int i=0; i<int(outputs.size()); ++i) {
+    //     cout << outputs[i] << endl;
+    // }
 
 
-    // Neural network test
+    // // Neural network test
     // vector<int> nIds1 = {0, 1, 2, 3};
     // vector<int> nIds2 = {0, 1, 2, 3};
     // vector<int> nIds3 = {0, 3};
@@ -300,7 +309,7 @@ int main() {
     // vector<double> inputs = {1, 2, 3, 4};
     // vector<double> outputs = network.outputs(inputs);
 
-    // Hotseat tic-tac-toe for two players on one computer
+    // // Hotseat tic-tac-toe for two players on one computer
     // gameBoard board = emptyBoard();
     // int winner = 0; //1 for x, 2 for o, -1 for tie.
     // gameLoop(board, winner);

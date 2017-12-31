@@ -19,7 +19,7 @@ private:
 
 public:
     NeuralNetworkLayer() {
-        //This is stupid. Don't use this.
+        //
         described = false;
     }
     NeuralNetworkLayer(std::vector<Neuron> neurons) {
@@ -80,7 +80,7 @@ private:
 
 public:
     NeuralNetwork() {
-        //This is stupid. Don't use this.
+        //
         described = false;
     }
     NeuralNetwork(std::vector<NeuralNetworkLayer> nnls) {

@@ -44,6 +44,8 @@ public:
         }
 
         phi = [](double x){ return log(1+exp(x)); }; //The (Continuous) Rectifier function is default.
+
+        described = true;
     }
     Neuron(std::vector<int> signalIDs, std::vector<double> signalWeights, std::function<double(double)> transFunc) {
         assert(signalIDs.size() == signalWeights.size());

@@ -235,10 +235,20 @@ int main() {
 
     vector<Neuron> ns = {n1, n2, n3};
 
-    NeuralNetworkLayer layer(ns);
+    NeuralNetworkLayer layer1(ns);
+
+    vector<int> l2NIDs = {0, 1, 2};
+    vector<double> l2NWeights = {1, 1, 0.25};
+
+    Neuron l2N(l2NIDs, l2NWeights, func);
+    vector<Neuron> l2 = {l2N};
+    NeuralNetworkLayer layer2(l2);
+
+    vector<NeuralNetworkLayer> layers = {layer1, layer2};
+    NeuralNetwork network(layers);
 
     vector<double> inputs = {1, 2, 3, 4};
-    vector<double> outputs = layer.outputs(inputs);
+    vector<double> outputs = network.outputs(inputs);
 
     // gameBoard board = emptyBoard();
     // int winner = 0; //1 for x, 2 for o, -1 for tie.

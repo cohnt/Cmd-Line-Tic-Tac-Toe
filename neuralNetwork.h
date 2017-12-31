@@ -16,9 +16,11 @@ class NeuralNetworkLayer {
 private:
     std::vector<Neuron> nodes;
     bool described;
+
 public:
     NeuralNetworkLayer() {
         //This is stupid. Don't use this.
+        //It also does not currently work, as there's no way (yet) to add neurons later :P
         described = false;
     }
     NeuralNetworkLayer(std::vector<Neuron> neurons) {
@@ -70,9 +72,35 @@ public:
 
 class NeuralNetwork {
 private:
-    //
+    std::vector<NeuralNetworkLayer> layers;
+    bool described;
+
 public:
-    //
+    NeuralNetwork() {
+        //This is stupid. Don't use this.
+        //It also does not currently work, as there's no way (yet) to add layers later :P
+        described = false;
+    }
+    NeuralNetwork(std::vector<NeuralNetworkLayer> nnls) {
+        described = true;
+
+        layers.reserve(int(nnls.size()));
+        for(int i=0; i<int(nnls.size()); ++i) {
+            layers.push_back(nnls[i]);
+        }
+    }
+
+    std::vector<double> outputs(std::vector<double> inVals) {
+        assert(described);
+
+        std::vector<double> currentIn = inVals;
+        std::vector<double> currentOut;
+        for(int i=0; i<int(layers.size()); ++i) {
+            currentOut = layers[i].outputs(currentIn);
+            currentIn = currentOut;
+        }
+        return currentOut;
+    }
 };
 
 #endif

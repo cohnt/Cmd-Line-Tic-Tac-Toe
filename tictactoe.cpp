@@ -347,10 +347,19 @@ TicTacToeGenome singleCrossover(TicTacToeGenome parentA, TicTacToeGenome parentB
 
     return TicTacToeGenome(parentA.getSigIds(), childWeights);
 }
-void mutate(TicTacToeGenome &genome) {
-    //
+void mutate(TicTacToeGenome &genome, double mutationChance) {
+    vector<vector<vector<int> > > ids;
+    for(int i=0; i<int(ids.size()); ++i) {
+        for(int j=0; j<int(ids[i].size()); ++j) {
+            for(int k=0; k<int(ids[i][j].size()); ++k) {
+                if(double(rand())/double(RAND_MAX) < mutationChance) {
+                    genome.setWeight(i, j, k, double(rand())/double(RAND_MAX));
+                }
+            }
+        }
+    }
 }
-vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, int numOffspring) {
+vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, int numOffspring, double mutationChance) {
     vector<TicTacToeGenome> offspring;
     offspring.reserve(numOffspring);
 
@@ -364,13 +373,13 @@ vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, 
             child = singleCrossover(parentB, parentA);
         }
 
-        mutate(child);
+        mutate(child, mutationChance);
         offspring.push_back(child);
     }
 
     return offspring;
 }
-vector<TicTacToeGenome> computeNextGeneration(vector<TicTacToeGenome> gen, vector<int> indexes, int numPerGen) {
+vector<TicTacToeGenome> computeNextGeneration(vector<TicTacToeGenome> gen, vector<int> indexes, int numPerGen, double mutationChance) {
     assert(int(indexes.size()) > 0);
     assert((numPerGen / int(indexes.size())) == (double(numPerGen) / double(indexes.size())));
     assert(int(indexes.size()) % 2 == 0);
@@ -380,7 +389,7 @@ vector<TicTacToeGenome> computeNextGeneration(vector<TicTacToeGenome> gen, vecto
     vector<TicTacToeGenome> newGen;
     newGen.reserve(numPerGen);
     for(int i=0; i<int(indexes.size()); i+=2) {
-        vector<TicTacToeGenome> newCreatures = breed(gen[indexes[i]], gen[indexes[i+1]], offspringPerCouple);
+        vector<TicTacToeGenome> newCreatures = breed(gen[indexes[i]], gen[indexes[i+1]], offspringPerCouple, mutationChance);
         for(int j=0; j<int(newCreatures.size()); ++j) {
             newGen.push_back(newCreatures[j]);
         }
@@ -422,8 +431,9 @@ int main() {
     vector<int> bestIndexes = selectBest(currentGeneration, fitness, numToBreed);
     for(int i=0; i<numGenerations; ++i) {
         cout << "Generation " << i << endl;
+        //currentGeneration[0].printGenome();
 
-        currentGeneration = computeNextGeneration(currentGeneration, bestIndexes, creaturesPerGeneration);
+        currentGeneration = computeNextGeneration(currentGeneration, bestIndexes, creaturesPerGeneration, mutationChance);
         fitness = compete(currentGeneration);
         bestIndexes = selectBest(currentGeneration, fitness, numToBreed);
     }

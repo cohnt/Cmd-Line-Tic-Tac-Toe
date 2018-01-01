@@ -82,6 +82,10 @@ public:
         //
         return sigWeights[layer][neur][id];
     }
+    void setWeight(int layer, int neur, int id, double weight) {
+        //
+        sigWeights[layer][neur][id] = weight;
+    }
     void printGenome() {
         for(int i=0; i<int(sigIds.size()); ++i) {
             std::cout << "Layer " << i << ":" << std::endl;

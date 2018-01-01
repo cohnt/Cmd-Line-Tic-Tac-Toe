@@ -8,6 +8,7 @@
 #include <functional>
 #include <random>
 #include <time.h>
+#include <algorithm>
 
 #include "ticTacToeGenome.h"
 
@@ -21,6 +22,12 @@ enum gamePiece {
 typedef array<array<gamePiece, 3>, 3> gameBoard;
 
 const bool useTerminalHackyStuff = true;
+
+const int numGenerations = 25;
+const int creaturesPerGeneration = 100;
+const int numToBreed = 20; //10 pairs, each with 10 offspring
+// const string crossOverType = "single"; //Options: single, double. Could add others later.
+const double mutationChance = 0.01; //0.5 is 50% chance for a single gene value to change
 
 void printGamePiece(gamePiece p) {
     switch(p) {
@@ -304,16 +311,123 @@ void printWinner(gameBoard board, int winner) {
     }
 }
 
+TicTacToeGenome singleCrossover(TicTacToeGenome parentA, TicTacToeGenome parentB) {
+    vector<vector<vector<double> > > aWeights = parentA.getSigWeights();
+    vector<vector<vector<double> > > bWeights = parentB.getSigWeights();
+
+    vector<vector<vector<double> > > childWeights;
+
+    int totalGenes = 0;
+    for(int i=0; i<int(aWeights.size()); ++i) {
+        for(int j=0; j<int(aWeights[i].size()); ++j) {
+            totalGenes += int(aWeights[i][j].size());
+        }
+    }
+    int flipIndex = rand() % totalGenes;
+
+    int currentGeneNumber = 0;
+    for(int i=0; i<int(aWeights.size()); ++i) {
+        childWeights.push_back(vector<vector<double> >());
+        childWeights[i].reserve(int(aWeights[i].size()));
+        for(int j=0; j<int(aWeights[i].size()); ++j) {
+            childWeights[i].push_back(vector<double>());
+            childWeights[i][j].reserve(int(aWeights[i][j].size()));
+            for(int k=0; k<int(aWeights[i][j].size()); ++k) {
+                if(currentGeneNumber < flipIndex) {
+                    childWeights[i][j].push_back(aWeights[i][j][k]);
+                }
+                else {
+                    childWeights[i][j].push_back(bWeights[i][j][k]);
+                }
+
+                ++currentGeneNumber;
+            }
+        }
+    }
+
+    return TicTacToeGenome(parentA.getSigIds(), childWeights);
+}
+void mutate(TicTacToeGenome &genome) {
+    //
+}
+vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, int numOffspring) {
+    vector<TicTacToeGenome> offspring;
+    offspring.reserve(numOffspring);
+
+    for(int i=0; i<numOffspring; ++i) {
+        TicTacToeGenome child;
+
+        if(double(rand())/double(RAND_MAX) >= 0.5) {
+            child = singleCrossover(parentA, parentB);
+        }
+        else {
+            child = singleCrossover(parentB, parentA);
+        }
+
+        mutate(child);
+        offspring.push_back(child);
+    }
+
+    return offspring;
+}
+vector<TicTacToeGenome> computeNextGeneration(vector<TicTacToeGenome> gen, vector<int> indexes, int numPerGen) {
+    assert(int(indexes.size()) > 0);
+    assert((numPerGen / int(indexes.size())) == (double(numPerGen) / double(indexes.size())));
+    assert(int(indexes.size()) % 2 == 0);
+
+    int offspringPerCouple = 2*(numPerGen / int(indexes.size()));
+
+    vector<TicTacToeGenome> newGen;
+    newGen.reserve(numPerGen);
+    for(int i=0; i<int(indexes.size()); i+=2) {
+        vector<TicTacToeGenome> newCreatures = breed(gen[indexes[i]], gen[indexes[i+1]], offspringPerCouple);
+        for(int j=0; j<int(newCreatures.size()); ++j) {
+            newGen.push_back(newCreatures[j]);
+        }
+    }
+
+    return newGen;
+}
+void loadRandomCreatures(vector<TicTacToeGenome> &generation, int num) {
+    for(int i=0; i<num; ++i) {
+        generation.push_back(TicTacToeGenome());
+        generation[i].randomize(3, vector<int>{18, 18, 9});
+    }
+}
+vector<double> compete(vector<TicTacToeGenome> generation) {
+    // Return, for each creature, its fitness (win %)
+
+    //TODO
+    vector<double> fitness;
+    for(int i=0; i<int(generation.size()); ++i) {
+        fitness.push_back(double(rand())/double(RAND_MAX));
+    }
+    return fitness;
+}
+vector<int> selectBest(vector<TicTacToeGenome> generation, vector<double> fitness, int num) {
+    assert(num <= int(fitness.size()));
+    sort(fitness.begin(), fitness.end());
+    return vector<int>(fitness.begin(), fitness.begin()+num);
+}
+
 int main() {
     srand(time(NULL));
 
-    // Play against a random AI
-    TicTacToeGenome testGenome;
-    testGenome.randomize(3, vector<int>{18, 18, 9});
-    testGenome.printGenome();
-    NeuralNetwork testNetwork = testGenome.generateNN();
-    vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    vector<double> outputs = testNetwork.outputs(inputs);
+    // Final version
+    //Learning stage
+    vector<TicTacToeGenome> currentGeneration;
+    currentGeneration.reserve(creaturesPerGeneration);
+    loadRandomCreatures(currentGeneration, creaturesPerGeneration);
+    vector<double> fitness = compete(currentGeneration);
+    vector<int> bestIndexes = selectBest(currentGeneration, fitness, numToBreed);
+    for(int i=0; i<numGenerations; ++i) {
+        cout << "Generation " << i << endl;
+
+        currentGeneration = computeNextGeneration(currentGeneration, bestIndexes, creaturesPerGeneration);
+        fitness = compete(currentGeneration);
+        bestIndexes = selectBest(currentGeneration, fitness, numToBreed);
+    }
+    NeuralNetwork testNetwork = currentGeneration[0].generateNN();
 
     gameBoard board = emptyBoard();
     int winner = 0; //1 for x, 2 for o, -1 for tie.
@@ -324,6 +438,24 @@ int main() {
     bool compGoesFirst = (uin == "n");
     aiVsPlayerGameLoop(board, winner, testNetwork, compGoesFirst);
     printWinner(board, winner);
+
+    // // Play against a random AI
+    // TicTacToeGenome testGenome;
+    // testGenome.randomize(3, vector<int>{18, 18, 9});
+    // testGenome.printGenome();
+    // NeuralNetwork testNetwork = testGenome.generateNN();
+    // vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // vector<double> outputs = testNetwork.outputs(inputs);
+
+    // gameBoard board = emptyBoard();
+    // int winner = 0; //1 for x, 2 for o, -1 for tie.
+    // cout << "Do you want to go first? (y/n) ";
+    // string uin;
+    // cin >> uin;
+    // assert(uin == "y" || uin == "n");
+    // bool compGoesFirst = (uin == "n");
+    // aiVsPlayerGameLoop(board, winner, testNetwork, compGoesFirst);
+    // printWinner(board, winner);
 
     // // Hotseat tic-tac-toe for two players on one computer
     // gameBoard board = emptyBoard();

@@ -12,33 +12,38 @@
 
 #include "ticTacToeGenome.h"
 
-using namespace std;
-
 enum gamePiece {
     empty,
     xPiece,
     oPiece
 };
-typedef array<array<gamePiece, 3>, 3> gameBoard;
+enum gameResult {
+    win,
+    loss,
+    tie
+};
+typedef std::array<std::array<gamePiece, 3>, 3> gameBoard;
 
 const bool useTerminalHackyStuff = true;
 
 const int numGenerations = 25;
-const int creaturesPerGeneration = 100;
+const int creaturesPerGeneration = 20;
 const int numToBreed = 20; //10 pairs, each with 10 offspring
-// const string crossOverType = "single"; //Options: single, double. Could add others later.
-const double mutationChance = 0.01; //0.5 is 50% chance for a single gene value to change
+// const std::string crossOverType = "single"; //Options: single, double. Could add others later.
+const double mutationChance = 0.001; //0.5 is 50% chance for a single gene value to change
+const int matchesPerCreaturePair = 5; //Each generation, between each creature, how many matches?
+const std::vector<int> networkArchitecture = {18, 27, 9, 9};
 
 void printGamePiece(gamePiece p) {
     switch(p) {
         case empty:
-            cout << " ";
+            std::cout << " ";
             break;
         case xPiece:
-            cout << "X";
+            std::cout << "X";
             break;
         case oPiece:
-            cout << "O";
+            std::cout << "O";
             break;
         default:
             assert(1 == 0);
@@ -50,12 +55,12 @@ void displayBoard(gameBoard board) {
         for(int j=0; j<3; ++j) {
             printGamePiece(board[i][j]);
             if(j < 2) {
-                cout << "|";
+                std::cout << "|";
             }
         }
-        cout << endl;
+        std::cout << std::endl;
         if(i < 2) {
-            cout << "-+-+-" << endl;
+            std::cout << "-+-+-" << std::endl;
         }
     }
 }
@@ -68,24 +73,24 @@ gameBoard emptyBoard() {
     }
     return foo;
 }
-array<int, 2> getChoice(bool xTurn, gameBoard board) {
+std::array<int, 2> getChoice(bool xTurn, gameBoard board) {
     bool valid = false;
-    array<int, 2> finalChoice;
+    std::array<int, 2> finalChoice;
     while(!valid) {
-        cout << "Player " << (xTurn ? "X" : "O") << ", it is your turn. Please select your space as two one-digit numbers, separated by nothing, with row first, and indexing from one." << endl;
-        cout << "For example: 12 would give me the top middle space." << endl;
-        string input;
-        cin >> input;
+        std::cout << "Player " << (xTurn ? "X" : "O") << ", it is your turn. Please select your space as two one-digit numbers, separated by nothing, with row first, and indexing from one." << std::endl;
+        std::cout << "For example: 12 would give me the top middle space." << std::endl;
+        std::string input;
+        std::cin >> input;
         if(input.size() != 2u) {
             if(useTerminalHackyStuff) {
                 printf("\033[2J\033[1;1H");
             }
             displayBoard(board);
-            cout << "Wrong number of characters!" << endl << endl;
+            std::cout << "Wrong number of characters!" << std::endl << std::endl;
             continue;
         }
         try {
-            array<int, 2> choice;
+            std::array<int, 2> choice;
             choice[0] = stoi(input.substr(0, 1));
             choice[1] = stoi(input.substr(1, 2));
             if(choice[0] > 3 || choice[0] < 1 || choice[1] > 3 || choice[1] < 1) {
@@ -93,7 +98,7 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
                     printf("\033[2J\033[1;1H");
                 }
                 displayBoard(board);
-                cout << "Invalid range!" << endl << endl;
+                std::cout << "Invalid range!" << std::endl << std::endl;
                 continue;
             }
             if(board[choice[0]-1][choice[1]-1] != empty) {
@@ -101,7 +106,7 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
                     printf("\033[2J\033[1;1H");
                 }
                 displayBoard(board);
-                cout << "Space already picked!" << endl << endl;
+                std::cout << "Space already picked!" << std::endl << std::endl;
                 continue;
             }
             finalChoice = choice;
@@ -112,7 +117,7 @@ array<int, 2> getChoice(bool xTurn, gameBoard board) {
                 printf("\033[2J\033[1;1H");
             }
             displayBoard(board);
-            cout << "Invalid numbers!" << endl << endl;
+            std::cout << "Invalid numbers!" << std::endl << std::endl;
             continue;
         }
     }
@@ -189,8 +194,8 @@ void hotseatGameLoop(gameBoard &board, int &winner) {
             printf("\033[2J\033[1;1H");
         }
         displayBoard(board);
-        array<int, 2> choice = getChoice(xTurn, board);
-        cout << choice[0] << " " << choice[1] << endl;
+        std::array<int, 2> choice = getChoice(xTurn, board);
+        std::cout << choice[0] << " " << choice[1] << std::endl;
         board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
         bool won = checkForWin(board, xTurn);
         if(won) {
@@ -208,8 +213,8 @@ void hotseatGameLoop(gameBoard &board, int &winner) {
         xTurn = !xTurn;
     }
 }
-vector<double> loadInputsFromBoard(gameBoard board) {
-    vector<double> res;
+std::vector<double> loadInputsFromBoard(gameBoard board) {
+    std::vector<double> res;
     for(int i=0; i<3; ++i) {
         for(int j=0; j<3; ++j) {
             if(board[i][j] == empty) {
@@ -239,11 +244,11 @@ void aiVsPlayerGameLoop(gameBoard &board, int &winner, NeuralNetwork ai, bool co
             printf("\033[2J\033[1;1H");
         }
         displayBoard(board);
-        array<int, 2> choice;
+        std::array<int, 2> choice;
         if(computerGoesFirst == xTurn) {
             //Computer's turn.
-            vector<double> inputs = loadInputsFromBoard(board);
-            vector<double> outputs = ai.outputs(inputs);
+            std::vector<double> inputs = loadInputsFromBoard(board);
+            std::vector<double> outputs = ai.outputs(inputs);
             //We have weights. Now select the highest empty space.
             while(true) {
                 double maxOutput = -1;
@@ -255,11 +260,11 @@ void aiVsPlayerGameLoop(gameBoard &board, int &winner, NeuralNetwork ai, bool co
                     }
                 }
                 assert(maxOutputIndex != -1);
-                cout << "Trying index " << maxOutputIndex << endl;
-                array<int, 2> coords;
+                std::cout << "Trying index " << maxOutputIndex << std::endl;
+                std::array<int, 2> coords;
                 coords[0] = maxOutputIndex / 3;
                 coords[1] = maxOutputIndex % 3;
-                cout << "Computed coords: " << coords[0] << " " << coords[1] << endl;
+                std::cout << "Computed coords: " << coords[0] << " " << coords[1] << std::endl;
                 if(board[coords[0]][coords[1]] == empty) {
                     choice = coords;
                     choice[0] += 1;
@@ -274,7 +279,7 @@ void aiVsPlayerGameLoop(gameBoard &board, int &winner, NeuralNetwork ai, bool co
         else {
             choice = getChoice(xTurn, board);
         }
-        cout << choice[0] << " " << choice[1] << endl;
+        std::cout << choice[0] << " " << choice[1] << std::endl;
         board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
         bool won = checkForWin(board, xTurn);
         if(won) {
@@ -298,24 +303,24 @@ void printWinner(gameBoard board, int winner) {
     }
     displayBoard(board);
     if(winner == 1) {
-        cout << "X wins!" << endl;
+        std::cout << "X wins!" << std::endl;
     }
     else if(winner == 2) {
-        cout << "O wins!" << endl;
+        std::cout << "O wins!" << std::endl;
     }
     else if(winner == -1) {
-        cout << "It's a tie!" << endl;
+        std::cout << "It's a tie!" << std::endl;
     }
     else {
-        cout << "Error." << endl;
+        std::cout << "Error." << std::endl;
     }
 }
 
 TicTacToeGenome singleCrossover(TicTacToeGenome parentA, TicTacToeGenome parentB) {
-    vector<vector<vector<double> > > aWeights = parentA.getSigWeights();
-    vector<vector<vector<double> > > bWeights = parentB.getSigWeights();
+    std::vector<std::vector<std::vector<double> > > aWeights = parentA.getSigWeights();
+    std::vector<std::vector<std::vector<double> > > bWeights = parentB.getSigWeights();
 
-    vector<vector<vector<double> > > childWeights;
+    std::vector<std::vector<std::vector<double> > > childWeights;
 
     int totalGenes = 0;
     for(int i=0; i<int(aWeights.size()); ++i) {
@@ -327,10 +332,10 @@ TicTacToeGenome singleCrossover(TicTacToeGenome parentA, TicTacToeGenome parentB
 
     int currentGeneNumber = 0;
     for(int i=0; i<int(aWeights.size()); ++i) {
-        childWeights.push_back(vector<vector<double> >());
+        childWeights.push_back(std::vector<std::vector<double> >());
         childWeights[i].reserve(int(aWeights[i].size()));
         for(int j=0; j<int(aWeights[i].size()); ++j) {
-            childWeights[i].push_back(vector<double>());
+            childWeights[i].push_back(std::vector<double>());
             childWeights[i][j].reserve(int(aWeights[i][j].size()));
             for(int k=0; k<int(aWeights[i][j].size()); ++k) {
                 if(currentGeneNumber < flipIndex) {
@@ -348,7 +353,7 @@ TicTacToeGenome singleCrossover(TicTacToeGenome parentA, TicTacToeGenome parentB
     return TicTacToeGenome(parentA.getSigIds(), childWeights);
 }
 void mutate(TicTacToeGenome &genome, double mutationChance) {
-    vector<vector<vector<int> > > ids;
+    std::vector<std::vector<std::vector<int> > > ids = genome.getSigIds();
     for(int i=0; i<int(ids.size()); ++i) {
         for(int j=0; j<int(ids[i].size()); ++j) {
             for(int k=0; k<int(ids[i][j].size()); ++k) {
@@ -359,8 +364,8 @@ void mutate(TicTacToeGenome &genome, double mutationChance) {
         }
     }
 }
-vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, int numOffspring, double mutationChance) {
-    vector<TicTacToeGenome> offspring;
+std::vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, int numOffspring, double mutationChance) {
+    std::vector<TicTacToeGenome> offspring;
     offspring.reserve(numOffspring);
 
     for(int i=0; i<numOffspring; ++i) {
@@ -379,17 +384,17 @@ vector<TicTacToeGenome> breed(TicTacToeGenome parentA, TicTacToeGenome parentB, 
 
     return offspring;
 }
-vector<TicTacToeGenome> computeNextGeneration(vector<TicTacToeGenome> gen, vector<int> indexes, int numPerGen, double mutationChance) {
+std::vector<TicTacToeGenome> computeNextGeneration(std::vector<TicTacToeGenome> gen, std::vector<int> indexes, int numPerGen, double mutationChance) {
     assert(int(indexes.size()) > 0);
-    assert((numPerGen / int(indexes.size())) == (double(numPerGen) / double(indexes.size())));
+    assert(((2*numPerGen) / int(indexes.size())) == (double(2*numPerGen) / double(indexes.size())));
     assert(int(indexes.size()) % 2 == 0);
 
     int offspringPerCouple = 2*(numPerGen / int(indexes.size()));
 
-    vector<TicTacToeGenome> newGen;
+    std::vector<TicTacToeGenome> newGen;
     newGen.reserve(numPerGen);
     for(int i=0; i<int(indexes.size()); i+=2) {
-        vector<TicTacToeGenome> newCreatures = breed(gen[indexes[i]], gen[indexes[i+1]], offspringPerCouple, mutationChance);
+        std::vector<TicTacToeGenome> newCreatures = breed(gen[indexes[i]], gen[indexes[i+1]], offspringPerCouple, mutationChance);
         for(int j=0; j<int(newCreatures.size()); ++j) {
             newGen.push_back(newCreatures[j]);
         }
@@ -397,26 +402,127 @@ vector<TicTacToeGenome> computeNextGeneration(vector<TicTacToeGenome> gen, vecto
 
     return newGen;
 }
-void loadRandomCreatures(vector<TicTacToeGenome> &generation, int num) {
+void loadRandomCreatures(std::vector<TicTacToeGenome> &generation, int num) {
     for(int i=0; i<num; ++i) {
         generation.push_back(TicTacToeGenome());
-        generation[i].randomize(3, vector<int>{18, 18, 9});
+        generation[i].randomize(int(networkArchitecture.size()), networkArchitecture);
     }
 }
-vector<double> compete(vector<TicTacToeGenome> generation) {
-    // Return, for each creature, its fitness (win %)
+gameResult playMatch(TicTacToeGenome p1, TicTacToeGenome p2) {
+    NeuralNetwork ai1 = p1.generateNN();
+    NeuralNetwork ai2 = p2.generateNN();
 
-    //TODO
-    vector<double> fitness;
+    gameBoard board = emptyBoard();
+    bool xTurn = rand() % 2;
+    while(true) {
+        std::array<int, 2> choice;
+        std::vector<double> inputs = loadInputsFromBoard(board);
+        std::vector<double> outputs;
+        if(xTurn) {
+            outputs = ai1.outputs(inputs);
+        }
+        else {
+            outputs = ai2.outputs(inputs);
+        }
+        //We have weights. Now select the highest empty space.
+        while(true) {
+            double maxOutput = -1;
+            int maxOutputIndex = -1;
+            for(int i=0; i<int(outputs.size()); ++i) {
+                if(outputs[i] > maxOutput) {
+                    maxOutput = outputs[i];
+                    maxOutputIndex = i;
+                }
+            }
+            assert(maxOutputIndex != -1);
+            std::array<int, 2> coords;
+            coords[0] = maxOutputIndex / 3;
+            coords[1] = maxOutputIndex % 3;
+            if(board[coords[0]][coords[1]] == empty) {
+                choice = coords;
+                choice[0] += 1;
+                choice[1] += 1;
+                break;
+            }
+            else {
+                outputs[maxOutputIndex] = -2;
+            }
+        }
+        board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
+        bool won = checkForWin(board, xTurn);
+        if(won) {
+            return (xTurn ? win : loss);
+        }
+        else {
+            bool tied = checkForTie(board);
+            if(tied) {
+                return tie;
+            }
+        }
+
+        xTurn = !xTurn;
+    }
+}
+std::vector<double> compete(std::vector<TicTacToeGenome> generation, int matchesPerPair) {
+    // Return, for each creature, its fitness (100% - lossChance for now)
+
+    std::vector<int> wins;
+    std::vector<int> losses;
+    std::vector<int> ties;
+    std::vector<int> games;
     for(int i=0; i<int(generation.size()); ++i) {
-        fitness.push_back(double(rand())/double(RAND_MAX));
+        wins.push_back(0);
+        losses.push_back(0);
+        ties.push_back(0);
+        games.push_back(0);
+    }
+
+    for(int i=0; i<int(generation.size()); ++i) {
+        for(int j=i+1; j<int(generation.size()); ++j) {
+            for(int k=0; k<matchesPerPair; ++k) {
+                gameResult res = playMatch(generation[i], generation[j]);
+                if(res == win) {
+                    ++wins[i];
+                    ++losses[j];
+                }
+                else if(res == loss) {
+                    ++losses[i];
+                    ++wins[j];
+                }
+                else {
+                    ++ties[i];
+                    ++ties[j];
+                }
+                ++games[i];
+                ++games[j];
+            }
+        }
+    }
+
+    std::vector<double> fitness;
+    for(int i=0; i<int(generation.size()); ++i) {
+        double lossChance = double(losses[i])/double(games[i]);
+        fitness.push_back(1.0 - lossChance);
     }
     return fitness;
 }
-vector<int> selectBest(vector<TicTacToeGenome> generation, vector<double> fitness, int num) {
+std::vector<int> selectBest(std::vector<double> fitness, int num) {
     assert(num <= int(fitness.size()));
-    sort(fitness.begin(), fitness.end());
-    return vector<int>(fitness.begin(), fitness.begin()+num);
+    std::vector<int> indexes;
+    indexes.reserve(num);
+    while(int(indexes.size()) < num) {
+        int maxIndex = -1;
+        double maxFitness = -1;
+        for(int i=0; i<int(fitness.size()); ++i) {
+            if(fitness[i] > maxFitness) {
+                maxFitness = fitness[i];
+                maxIndex = i;
+            }
+        }
+        indexes.push_back(maxIndex);
+        fitness[maxIndex] = -1;
+    }
+    return indexes;
 }
 
 int main() {
@@ -424,44 +530,59 @@ int main() {
 
     // Final version
     //Learning stage
-    vector<TicTacToeGenome> currentGeneration;
+    std::vector<TicTacToeGenome> currentGeneration;
     currentGeneration.reserve(creaturesPerGeneration);
     loadRandomCreatures(currentGeneration, creaturesPerGeneration);
-    vector<double> fitness = compete(currentGeneration);
-    vector<int> bestIndexes = selectBest(currentGeneration, fitness, numToBreed);
+    std::vector<double> fitness = compete(currentGeneration, matchesPerCreaturePair);
+    std::vector<int> bestIndexes = selectBest(fitness, numToBreed);
     for(int i=0; i<numGenerations; ++i) {
-        cout << "Generation " << i << endl;
+        std::cout << "Generation " << i << std::endl;
         //currentGeneration[0].printGenome();
 
         currentGeneration = computeNextGeneration(currentGeneration, bestIndexes, creaturesPerGeneration, mutationChance);
-        fitness = compete(currentGeneration);
-        bestIndexes = selectBest(currentGeneration, fitness, numToBreed);
+        fitness = compete(currentGeneration, matchesPerCreaturePair);
+        bestIndexes = selectBest(fitness, numToBreed);
+        std::cout << bestIndexes[0];
+        for(int i=1; i<int(bestIndexes.size()); ++i) {
+            if(bestIndexes[i] < 10) {
+                std::cout << " ";
+            }
+            std::cout << " " << bestIndexes[i];
+        }
+        std::cout << std::endl;
     }
-    NeuralNetwork testNetwork = currentGeneration[0].generateNN();
+    NeuralNetwork testNetwork = currentGeneration[bestIndexes[0]].generateNN();
 
-    gameBoard board = emptyBoard();
-    int winner = 0; //1 for x, 2 for o, -1 for tie.
-    cout << "Do you want to go first? (y/n) ";
-    string uin;
-    cin >> uin;
-    assert(uin == "y" || uin == "n");
-    bool compGoesFirst = (uin == "n");
-    aiVsPlayerGameLoop(board, winner, testNetwork, compGoesFirst);
-    printWinner(board, winner);
+    while(true) {
+        gameBoard board = emptyBoard();
+        int winner = 0; //1 for x, 2 for o, -1 for tie.
+        std::cout << "Do you want to go first? (y/n) ";
+        std::string uin;
+        std::cin >> uin;
+        assert(uin == "y" || uin == "n");
+        bool compGoesFirst = (uin == "n");
+        aiVsPlayerGameLoop(board, winner, testNetwork, compGoesFirst);
+
+        std::cout << std::endl << std::endl << std::endl;
+        currentGeneration[bestIndexes[0]].printGenome();
+        std::cout << "Best ai" << std::endl;
+
+        printWinner(board, winner);
+    }
 
     // // Play against a random AI
     // TicTacToeGenome testGenome;
-    // testGenome.randomize(3, vector<int>{18, 18, 9});
+    // testGenome.randomize(3, std::vector<int>{18, 18, 9});
     // testGenome.printGenome();
     // NeuralNetwork testNetwork = testGenome.generateNN();
-    // vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    // vector<double> outputs = testNetwork.outputs(inputs);
+    // std::vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // std::vector<double> outputs = testNetwork.outputs(inputs);
 
     // gameBoard board = emptyBoard();
     // int winner = 0; //1 for x, 2 for o, -1 for tie.
-    // cout << "Do you want to go first? (y/n) ";
-    // string uin;
-    // cin >> uin;
+    // std::cout << "Do you want to go first? (y/n) ";
+    // std::string uin;
+    // std::cin >> uin;
     // assert(uin == "y" || uin == "n");
     // bool compGoesFirst = (uin == "n");
     // aiVsPlayerGameLoop(board, winner, testNetwork, compGoesFirst);
@@ -475,44 +596,44 @@ int main() {
 
     // // Random tic-tac-toe neural network genome and evaluation of an empty board.
     // TicTacToeGenome testGenome;
-    // testGenome.randomize(3, vector<int>{18, 18, 9});
+    // testGenome.randomize(3, std::vector<int>{18, 18, 9});
     // testGenome.printGenome();
     // NeuralNetwork testNetwork = testGenome.generateNN();
-    // vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    // vector<double> outputs = testNetwork.outputs(inputs);
+    // std::vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // std::vector<double> outputs = testNetwork.outputs(inputs);
 
     // // Sample tic-tac-toe neural network genome
-    // vector<NeuralNetworkLayer> ls;
+    // std::vector<NeuralNetworkLayer> ls;
     // NeuralNetworkLayer l1; //Inputs
     // NeuralNetworkLayer l2; //Hidden
     // NeuralNetworkLayer l3; //Outputs
 
     // //Useful things to have
-    // vector<int> all18;
-    // vector<double> all1; 
+    // std::vector<int> all18;
+    // std::vector<double> all1; 
     // for(int i=0; i<18; ++i) {
     //     all18.push_back(i);
     //     all1.push_back(1.0);
     // }
-    // function<double(double)> rectify = [](double x){ return log(1+exp(x)); };
+    // std::function<double(double)> rectify = [](double x){ return log(1+exp(x)); };
 
     // for(int i=0; i<18; ++i) {
-    //     vector<int> inputIds = {i};
-    //     vector<double> inputWeights = {1};
+    //     std::vector<int> inputIds = {i};
+    //     std::vector<double> inputWeights = {1};
     //     Neuron neuron(inputIds, inputWeights, rectify);
     //     l1.addNeuron(neuron);
     // }
 
     // for(int i=0; i<18; ++i) {
-    //     vector<int> inputIds = all18;
-    //     vector<double> inputWeights = all1;
+    //     std::vector<int> inputIds = all18;
+    //     std::vector<double> inputWeights = all1;
     //     Neuron neuron(inputIds, inputWeights, rectify);
     //     l2.addNeuron(neuron);
     // }
 
     // for(int i=0; i<9; ++i) {
-    //     vector<int> inputIds = all18;
-    //     vector<double> inputWeights = all1;
+    //     std::vector<int> inputIds = all18;
+    //     std::vector<double> inputWeights = all1;
     //     Neuron neuron(inputIds, inputWeights, rectify);
     //     l3.addNeuron(neuron);
     // }
@@ -522,45 +643,45 @@ int main() {
     // ls.push_back(l3);
     // NeuralNetwork network(ls);
 
-    // vector<double> inputs = all1;
-    // vector<double> outputs = network.outputs(inputs);
-    // cout << endl << "Output:" << endl;
+    // std::vector<double> inputs = all1;
+    // std::vector<double> outputs = network.outputs(inputs);
+    // std::cout << std::endl << "Output:" << std::endl;
     // for(int i=0; i<int(outputs.size()); ++i) {
-    //     cout << outputs[i] << endl;
+    //     std::cout << outputs[i] << std::endl;
     // }
 
 
     // // Neural network test
-    // vector<int> nIds1 = {0, 1, 2, 3};
-    // vector<int> nIds2 = {0, 1, 2, 3};
-    // vector<int> nIds3 = {0, 3};
+    // std::vector<int> nIds1 = {0, 1, 2, 3};
+    // std::vector<int> nIds2 = {0, 1, 2, 3};
+    // std::vector<int> nIds3 = {0, 3};
 
-    // vector<double> nWeights1 = {1, 1, 1, 1};
-    // vector<double> nWeights2 = {0.5, 0.5, 0.5, 0.5};
-    // vector<double> nWeights3 = {0.67, 0.33};
+    // std::vector<double> nWeights1 = {1, 1, 1, 1};
+    // std::vector<double> nWeights2 = {0.5, 0.5, 0.5, 0.5};
+    // std::vector<double> nWeights3 = {0.67, 0.33};
 
-    // function<double(double)> func = [](double x){ return (x>0 ? x : 0); };
+    // std::function<double(double)> func = [](double x){ return (x>0 ? x : 0); };
 
     // Neuron n1(nIds1, nWeights1, func);
     // Neuron n2(nIds2, nWeights2, func);
     // Neuron n3(nIds3, nWeights3, func);
 
-    // vector<Neuron> ns = {n1, n2, n3};
+    // std::vector<Neuron> ns = {n1, n2, n3};
 
     // NeuralNetworkLayer layer1(ns);
 
-    // vector<int> l2NIDs = {0, 1, 2};
-    // vector<double> l2NWeights = {1, 1, 0.25};
+    // std::vector<int> l2NIDs = {0, 1, 2};
+    // std::vector<double> l2NWeights = {1, 1, 0.25};
 
     // Neuron l2N(l2NIDs, l2NWeights, func);
-    // vector<Neuron> l2 = {l2N};
+    // std::vector<Neuron> l2 = {l2N};
     // NeuralNetworkLayer layer2(l2);
 
-    // vector<NeuralNetworkLayer> layers = {layer1, layer2};
+    // std::vector<NeuralNetworkLayer> layers = {layer1, layer2};
     // NeuralNetwork network(layers);
 
-    // vector<double> inputs = {1, 2, 3, 4};
-    // vector<double> outputs = network.outputs(inputs);
+    // std::vector<double> inputs = {1, 2, 3, 4};
+    // std::vector<double> outputs = network.outputs(inputs);
 
     // // Hotseat tic-tac-toe for two players on one computer
     // gameBoard board = emptyBoard();

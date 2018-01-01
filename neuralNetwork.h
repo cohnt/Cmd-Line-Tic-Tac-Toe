@@ -65,9 +65,9 @@ public:
             res.push_back(nodes[i].output(specificSignalVals));
         }
 
-        for(int i=0; i<int(res.size()); ++i) {
-            std::cout << res[i] << std::endl;
-        }
+        // for(int i=0; i<int(res.size()); ++i) {
+        //     std::cout << res[i] << std::endl;
+        // }
 
         return res;
     }
@@ -102,7 +102,7 @@ public:
         std::vector<double> currentIn = inVals;
         std::vector<double> currentOut;
         for(int i=0; i<int(layers.size()); ++i) {
-            std::cout << std::endl << "Layer " << i << std::endl;
+            // std::cout << std::endl << "Layer " << i << std::endl;
             currentOut = layers[i].outputs(currentIn);
             currentIn = currentOut;
         }

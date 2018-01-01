@@ -9,7 +9,7 @@
 #include <random>
 #include <time.h>
 
-#include "ticTacToeNeuralNetwork.h"
+#include "ticTacToeGenome.h"
 
 using namespace std;
 
@@ -223,10 +223,13 @@ void printWinner(gameBoard board, int winner) {
 int main() {
     srand(time(NULL));
 
-    // Random tic-tac-toe neural network genome
+    // Random tic-tac-toe neural network genome and evaluation of an empty board.
     TicTacToeGenome testGenome;
     testGenome.randomize(3, vector<int>{18, 18, 9});
     testGenome.printGenome();
+    NeuralNetwork testNetwork = testGenome.generateNN();
+    vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    vector<double> outputs = testNetwork.outputs(inputs);
 
     // // Sample tic-tac-toe neural network genome
     // vector<NeuralNetworkLayer> ls;

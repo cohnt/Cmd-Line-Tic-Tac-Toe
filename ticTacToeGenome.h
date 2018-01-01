@@ -1,5 +1,5 @@
-#ifndef TIC_TAC_TOE_NEURAL_NETWORK_H
-#define TIC_TAC_TOE_NEURAL_NETWORK_H
+#ifndef TIC_TAC_TOE_GENOME
+#define TIC_TAC_TOE_GENOME
 
 #include <iostream>
 #include <cstdlib>
@@ -13,20 +13,15 @@
 
 #include "neuralNetwork.h"
 
-class TicTacToeNeuralNetwork {
-private:
-    //
-public:
-    //
-};
-
 class TicTacToeGenome {
 private:
     std::vector<std::vector<std::vector<int> > > sigIds;
     std::vector<std::vector<std::vector<double> > > sigWeights;
     bool described;
+
 public:
     TicTacToeGenome() {
+        //
         described = false;
     }
     TicTacToeGenome(std::vector<std::vector<std::vector<int> > > ids, std::vector<std::vector<std::vector<double> > > weights) {
@@ -100,9 +95,31 @@ public:
             std::cout << std::endl;
         }
     }
-    // TicTacToeNeuralNetwork generateNN() {
-    //     //
-    // }
+    NeuralNetwork generateNN() {
+        assert(sigIds.size() > 1u);
+        assert(sigIds[0].size() == 18u);
+        assert(sigIds.back().size() == 9u);
+        //May need more later?
+
+        std::vector<NeuralNetworkLayer> layers;
+        std::function<double(double)> transFunction = [](double x){ return log(1+exp(x)); };
+        for(int i=0; i<int(sigIds.size()); ++i) {
+            std::vector<Neuron> neurons;
+            for(int j=0; j<int(sigIds[i].size()); ++j) {
+                std::vector<int> ids;
+                std::vector<double> weights;
+                ids.reserve(int(sigIds[i][j].size()));
+                weights.reserve(int(sigIds[i][j].size()));
+                for(int k=0; k<int(sigIds[i][j].size()); ++k) {
+                    ids.push_back(sigIds[i][j][k]);
+                    weights.push_back(sigWeights[i][j][k]);
+                }
+                neurons.push_back(Neuron(ids, weights, transFunction));
+            }
+            layers.push_back(NeuralNetworkLayer(neurons));
+        }
+        return NeuralNetwork(layers);
+    }
 };
 
 #endif

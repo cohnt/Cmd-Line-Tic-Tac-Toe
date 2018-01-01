@@ -174,7 +174,7 @@ bool checkForTie(gameBoard board) {
     }
     return true;
 }
-void gameLoop(gameBoard &board, int &winner) {
+void hotseatGameLoop(gameBoard &board, int &winner) {
     bool gameOver = false;
     bool xTurn = true;
     while(!gameOver) {
@@ -183,6 +183,90 @@ void gameLoop(gameBoard &board, int &winner) {
         }
         displayBoard(board);
         array<int, 2> choice = getChoice(xTurn, board);
+        cout << choice[0] << " " << choice[1] << endl;
+        board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
+        bool won = checkForWin(board, xTurn);
+        if(won) {
+            winner = xTurn ? 1 : 2;
+            gameOver = true;
+        }
+        else {
+            bool tied = checkForTie(board);
+            if(tied) {
+                winner = -1;
+                gameOver = true;
+            }
+        }
+
+        xTurn = !xTurn;
+    }
+}
+vector<double> loadInputsFromBoard(gameBoard board) {
+    vector<double> res;
+    for(int i=0; i<3; ++i) {
+        for(int j=0; j<3; ++j) {
+            if(board[i][j] == empty) {
+                res.push_back(0);
+                res.push_back(0);
+            }
+            else if(board[i][j] == xPiece) {
+                res.push_back(1);
+                res.push_back(0);
+            }
+            else if(board[i][j] == oPiece) {
+                res.push_back(0);
+                res.push_back(1);
+            }
+        }
+    }
+    assert(res.size() == 18u);
+    return res;
+}
+void aiVsPlayerGameLoop(gameBoard &board, int &winner, NeuralNetwork ai, bool computerGoesFirst) {
+    //Make this better later.
+
+    bool gameOver = false;
+    bool xTurn = true;
+    while(!gameOver) {
+        if(useTerminalHackyStuff) {
+            printf("\033[2J\033[1;1H");
+        }
+        displayBoard(board);
+        array<int, 2> choice;
+        if(computerGoesFirst == xTurn) {
+            //Computer's turn.
+            vector<double> inputs = loadInputsFromBoard(board);
+            vector<double> outputs = ai.outputs(inputs);
+            //We have weights. Now select the highest empty space.
+            while(true) {
+                double maxOutput = -1;
+                int maxOutputIndex = -1;
+                for(int i=0; i<int(outputs.size()); ++i) {
+                    if(outputs[i] > maxOutput) {
+                        maxOutput = outputs[i];
+                        maxOutputIndex = i;
+                    }
+                }
+                assert(maxOutputIndex != -1);
+                cout << "Trying index " << maxOutputIndex << endl;
+                array<int, 2> coords;
+                coords[0] = maxOutputIndex / 3;
+                coords[1] = maxOutputIndex % 3;
+                cout << "Computed coords: " << coords[0] << " " << coords[1] << endl;
+                if(board[coords[0]][coords[1]] == empty) {
+                    choice = coords;
+                    choice[0] += 1;
+                    choice[1] += 1;
+                    break;
+                }
+                else {
+                    outputs[maxOutputIndex] = -2;
+                }
+            }
+        }
+        else {
+            choice = getChoice(xTurn, board);
+        }
         cout << choice[0] << " " << choice[1] << endl;
         board[choice[0]-1][choice[1]-1] = (xTurn ? xPiece : oPiece);
         bool won = checkForWin(board, xTurn);
@@ -223,13 +307,37 @@ void printWinner(gameBoard board, int winner) {
 int main() {
     srand(time(NULL));
 
-    // Random tic-tac-toe neural network genome and evaluation of an empty board.
+    // Play against a random AI
     TicTacToeGenome testGenome;
     testGenome.randomize(3, vector<int>{18, 18, 9});
     testGenome.printGenome();
     NeuralNetwork testNetwork = testGenome.generateNN();
     vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     vector<double> outputs = testNetwork.outputs(inputs);
+
+    gameBoard board = emptyBoard();
+    int winner = 0; //1 for x, 2 for o, -1 for tie.
+    cout << "Do you want to go first? (y/n) ";
+    string uin;
+    cin >> uin;
+    assert(uin == "y" || uin == "n");
+    bool compGoesFirst = (uin == "n");
+    aiVsPlayerGameLoop(board, winner, testNetwork, compGoesFirst);
+    printWinner(board, winner);
+
+    // // Hotseat tic-tac-toe for two players on one computer
+    // gameBoard board = emptyBoard();
+    // int winner = 0; //1 for x, 2 for o, -1 for tie.
+    // hotseatGameLoop(board, winner);
+    // printWinner(board, winner);
+
+    // // Random tic-tac-toe neural network genome and evaluation of an empty board.
+    // TicTacToeGenome testGenome;
+    // testGenome.randomize(3, vector<int>{18, 18, 9});
+    // testGenome.printGenome();
+    // NeuralNetwork testNetwork = testGenome.generateNN();
+    // vector<double> inputs = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // vector<double> outputs = testNetwork.outputs(inputs);
 
     // // Sample tic-tac-toe neural network genome
     // vector<NeuralNetworkLayer> ls;
@@ -315,7 +423,7 @@ int main() {
     // // Hotseat tic-tac-toe for two players on one computer
     // gameBoard board = emptyBoard();
     // int winner = 0; //1 for x, 2 for o, -1 for tie.
-    // gameLoop(board, winner);
+    // hotseatGameLoop(board, winner);
     // printWinner(board, winner);
 
     return 0;
